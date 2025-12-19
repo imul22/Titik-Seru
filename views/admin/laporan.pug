@@ -1,0 +1,31 @@
+extends ../layout
+
+block content
+  h2.mb-4 Laporan Penjualan
+  
+  .row.mb-4
+    .col-md-6
+      .card.bg-info.text-white.p-3
+        h5 Total Pendapatan Hari Ini
+        h3 Rp #{harian.total.toLocaleString()}
+    .col-md-6.d-flex.align-items-center.justify-content-end
+      a.btn.btn-success.btn-lg(href="/admin/export-excel") 
+        i.bi.bi-file-earmark-excel.me-2
+        | Export ke Excel
+
+  .card.shadow-sm
+    .card-body
+      table.table.table-striped
+        thead
+          tr
+            th Waktu
+            th Items
+            th Total
+        tbody
+          each trx in history
+            tr
+              td= trx.tanggal.toLocaleString('id-ID')
+              td
+                each item in trx.items
+                  span.badge.bg-secondary.me-1 #{item.nama} (x#{item.qty})
+              td.fw-bold Rp #{trx.totalBayar.toLocaleString()}

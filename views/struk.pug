@@ -1,0 +1,46 @@
+doctype html
+html
+  head
+    title Struk Belanja
+    style.
+      body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 10px; font-size: 12px; }
+      .text-center { text-align: center; }
+      .dashed-line { border-bottom: 1px dashed #000; margin: 10px 0; }
+      .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+      .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 10px; }
+      @media print { .no-print { display: none; } }
+  body
+    .text-center
+      strong TITIK SERU!!!
+      br
+      | Jl. Sam Ratulangi Malompo Nabire Papua Tengah
+      br
+      | Wa: 0821-8816-0867
+      .dashed-line
+
+    p No: #{trx._id.toString().slice(-6).toUpperCase()}
+    p Tgl: #{trx.tanggal.toLocaleString('id-ID')}
+    .dashed-line
+
+    each item in trx.items
+      div
+        div= item.nama
+        .item-row
+          span #{item.qty} x #{item.harga.toLocaleString()}
+          span= item.subtotal.toLocaleString()
+    
+    .dashed-line
+    .total-row
+      span TOTAL
+      span Rp#{trx.totalBayar.toLocaleString()}
+    
+    .dashed-line
+    .text-center
+      p Terima Kasih
+      p Barang yang sudah dibeli
+      p tidak dapat ditukar/dikembalikan.
+    
+    .no-print(style="margin-top: 20px; text-align: center;")
+      button(onclick="window.print()") Cetak (CTRL+P)
+      br
+      a(href="/") Kembali ke Kasir

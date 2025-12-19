@@ -1,0 +1,92 @@
+extends ../layout
+
+block content
+  // CSS DataTables
+  link(rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css")
+  
+  .d-flex.justify-content-between.flex-wrap.flex-md-nowrap.align-items-center.pt-3.pb-2.mb-3.border-bottom
+    h1.h2 📦 Manajemen Inventori
+    .btn-toolbar.mb-2.mb-md-0
+      a.btn.btn-sm.btn-outline-secondary(href="/admin/laporan")
+        i.bi.bi-graph-up.me-1
+        | Lihat Laporan
+
+  .row
+    // Form Tambah Produk Baru
+    .col-lg-4
+      .card.shadow-sm.border-0.mb-4
+        .card-header.bg-dark.text-white.py-3
+          h6.mb-0 Tambah Produk Baru
+        .card-body
+          form(action="/admin/add-product" method="POST")
+            .mb-3
+              label.form-label Nama Produk
+              input.form-control(name="nama" placeholder="Contoh: Kopi Susu" required)
+            .mb-3
+              label.form-label Harga Jual (Rp)
+              input.form-control(name="harga" type="number" placeholder="0" required)
+            .mb-3
+              label.form-label Stok Awal
+              input.form-control(name="stok" type="number" placeholder="0" required)
+            .mb-3
+              label.form-label Kategori
+              select.form-select(name="kategori")
+                option(value="Makanan") Makanan
+                option(value="Minuman") Minuman
+                option(value="Lain-lain" selected) Lain-lain
+            button.btn.btn-primary.w-100.py-2(type="submit")
+              i.bi.bi-plus-circle.me-2
+              | Simpan Produk
+
+    // Tabel Update Stok & Harga
+    .col-lg-8
+      .card.shadow-sm.border-0
+        .card-header.bg-white.py-3
+          h6.mb-0.fw-bold Daftar Stok & Kendali Harga
+        .card-body
+          .table-responsive
+            table#adminProductTable.table.table-hover.align-middle(style="width:100%")
+              thead.table-light
+                tr
+                  th Produk
+                  th Harga (Rp)
+                  th Stok
+                  th.text-center Aksi
+              tbody
+                each p in products
+                  tr
+                    form(action="/admin/update-product" method="POST")
+                      input(type="hidden" name="id" value=p._id)
+                      td
+                        input.form-control.form-control-sm(name="nama" value=p.nama required)
+                      td
+                        input.form-control.form-control-sm(name="harga" type="number" value=p.harga required style="max-width: 120px;")
+                      td
+                        input.form-control.form-control-sm(name="stok" type="number" value=p.stok required style="max-width: 80px;")
+                      td.text-center
+                        button.btn.btn-warning.btn-sm.rounded-pill.px-3(type="submit")
+                          i.bi.bi-pencil-square.me-1
+                          | Update
+
+  // Scripts DataTables
+  script(src="https://code.jquery.com/jquery-3.7.0.js")
+  script(src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js")
+  script(src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js")
+  
+  script.
+    $(document).ready(function() {
+        $('#adminProductTable').DataTable({
+            "language": {
+                "search": "Cari Barang:",
+                "lengthMenu": "Tampilkan _MENU_",
+                "zeroRecords": "Barang tidak ditemukan",
+                "info": "Menampilkan _TOTAL_ barang",
+                "paginate": {
+                    "next": "→",
+                    "previous": "←"
+                }
+            },
+            "pageLength": 10,
+            "order": [[ 0, "asc" ]] // Urutkan berdasarkan nama
+        });
+    });
