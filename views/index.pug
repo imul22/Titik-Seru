@@ -1,193 +1,218 @@
 extends layout
 
 block content
-  // Tambahkan CSS DataTables di Header
+  //- CSS DataTables & Modern UI Fix
   link(rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css")
-  
-  .d-flex.justify-content-between.flex-wrap.flex-md-nowrap.align-items-center.pt-3.pb-2.mb-3.border-bottom
-    span.badge.bg-dark.p-2= new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  style.
+    :root { --primary-soft: #f0f4f8; --accent-color: #0d6efd; }
+    body { background-color: #f5f7fa; }
+    
+    /* Panel Katalog */
+    .catalog-card { border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .dataTables_filter input { 
+      border-radius: 10px; border: 1px solid #e2e8f0; padding: 10px 15px;
+      background: #f8fafc; width: 100% !important; margin: 10px 0 !important;
+    }
+    .clickable-row { cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f1f5f9; }
+    .clickable-row:hover { background-color: var(--primary-soft) !important; }
 
-  .row
-    .col-lg-7.col-12.mb-3
-      .card.shadow-sm.border-0.rounded-3
-        .card-header.bg-primary.text-white.py-3
-          h5.mb-0.fw-bold 📦 Produk
-        .card-body
-          .table-responsive
-            table.table.table-hover#productTable
+    /* Sidebar Keranjang */
+    .cart-container { position: sticky; top: 20px; border-radius: 16px; border: none; }
+    .cart-items-area { max-height: 400px; overflow-y: auto; padding: 10px; }
+    .cart-item { 
+      background: #fff; border: 1px solid #f1f5f9; border-radius: 12px;
+      padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-checkout { border-radius: 12px; font-weight: 700; letter-spacing: 0.5px; transition: 0.3s; }
+    .btn-checkout:not(:disabled):hover { background-color: #157347; transform: translateY(-2px); }
+
+  .container-fluid.py-4
+    .row.g-4
+      //- SISI KIRI: KATALOG PRODUK
+      .col-lg-7
+        .card.catalog-card
+          .card-body.p-4
+            .d-flex.justify-content-between.align-items-center.mb-3
+              h5.fw-bold.mb-0 📦 Daftar Menu
+              span.text-muted.small= new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })
+            
+            table.table.align-middle#productTable(style="width:100%")
               thead.bg-light
                 tr
-                  th Produk
+                  th.ps-3 Produk
                   th Harga
-                  th.text-end Stok
+                  th.text-end.pe-3 Stok
               tbody
                 each p in products
-                  //- Kita tambahkan pengecekan: jika stok 0, baris tidak bisa diklik
                   tr.clickable-row(
-                    class=(p.stok <= 0 ? 'table-secondary opacity-50' : '')
-                    onclick=(p.stok > 0 ? `addToCart('${p._id}', '${p.nama}', ${p.harga}, ${p.stok})` : "alert('Stok Habis!')")
-                    style="cursor: pointer;"
+                    id=`row-${p._id}`
+                    class=(p.stok <= 0 ? 'opacity-50' : '')
+                    onclick=(p.stok > 0 ? `addToCart('${p._id}', '${p.nama}', ${p.harga}, ${p.stok})` : "")
                   )
-                    td
-                      .fw-bold= p.nama
-                      if p.stok <= 0
-                        span.badge.bg-danger.sm Stok Habis
-                      else
-                        small.text-muted.d-md-none Tap untuk tambah
-                    td Rp #{p.harga.toLocaleString()}
-                    td.text-end
-                      //- Menampilkan stok dengan warna dinamis
-                      span.badge(
+                    td.ps-3
+                      .fw-bold.text-dark= p.nama
+                      small.text-muted= p.kategori || 'Umum'
+                    td.fw-bold.text-accent Rp #{p.harga.toLocaleString('id-ID')}
+                    td.text-end.pe-3
+                      span.badge.rounded-pill(
                         id=`stock-display-${p._id}`
                         class=(p.stok <= 5 ? 'bg-danger' : (p.stok <= 15 ? 'bg-warning text-dark' : 'bg-success'))
                       )= p.stok
 
-    // Bagian Kanan: Keranjang Belanja
-    .col-lg-5
-      .card.shadow-sm.border-0.rounded-3.sticky-top(style="top: 20px; z-index: 100;")
-        .card-header.bg-primary.text-white.py-3
-          h5.mb-0.fw-bold 🧾 Keranjang Belanja
-        .card-body.p-0
-          form#checkoutForm(action="/checkout" method="POST")
-            .table-responsive(style="max-height: 350px; min-height: 200px;")
-              table.table.table-borderless.align-middle#cartTable
-                thead.border-bottom
-                  tr
-                    th Item
-                    th.text-center Qty
-                    th.text-end Subtotal
-                    th
-                tbody
-                  // Item dimasukkan lewat JavaScript
-              #emptyCart.text-center.py-5
-                i.bi.bi-cart-x.fs-1.text-muted
-                p.text-muted Keranjang masih kosong
+      //- SISI KANAN: KASIR / KERANJANG
+      .col-lg-5
+        .card.cart-container.shadow-sm
+          .card-header.bg-white.py-3.border-0
+            h5.fw-bold.mb-0 🧾 Detail Pesanan
+          
+          //- List Produk di Keranjang
+          .cart-items-area#cartList
+            //- Dinamis via JS
+          
+          #emptyCart.text-center.py-5
+            i.bi.bi-bag-plus.display-4.text-light
+            p.text-muted Silahkan pilih produk di kiri
 
-            .p-3.bg-light.border-top
-              .d-flex.justify-content-between.mb-2
-                span.text-muted Total Belanja
-                h5#grandTotalDisplay.fw-bold.mb-0 Rp 0
-              
-              .mb-3
-                label.form-label.small.fw-bold Tunai (Rp)
-                input#inputBayar.form-control.form-control-lg.fw-bold(type="number" name="tunai" placeholder="0" onkeyup="hitungKembalian()")
-              
-              .d-flex.justify-content-between.mb-3
-                span.text-muted Kembalian
-                h5#displayKembalian.text-danger.fw-bold.mb-0 Rp 0
+          //- Ringkasan & Pembayaran
+          .card-footer.bg-white.border-top-0.p-4
+            .d-flex.justify-content-between.mb-2
+              span.text-muted Total Bayar
+              h3#grandTotalDisplay.fw-bold.text-primary Rp 0
+            
+            .form-group.mb-3
+              label.small.fw-bold.mb-1 Nominal Tunai
+              .input-group
+                span.input-group-text.bg-white.border-end-0 Rp
+                input#inputBayar.form-control.form-control-lg.border-start-0.fw-bold(
+                  type="number" 
+                  placeholder="0" 
+                  onkeyup="hitungKembalian()"
+                )
+            
+            .d-flex.justify-content-between.align-items-center.mb-4
+              span.text-muted Kembalian
+              h5#displayKembalian.fw-bold.mb-0 Rp 0
 
-              button#btnBayar.btn.btn-success.btn-lg.w-100.rounded-3(type="submit" disabled)
-                i.bi.bi-cash-stack.me-2
-                | Proses Pembayaran
+            button#btnBayar.btn.btn-success.btn-lg.w-100.py-3.btn-checkout(type="button" onclick="prosesTransaksi()" disabled)
+              i.bi.bi-check2-circle.me-2
+              | SELESAIKAN TRANSAKSI
 
-  // Scripts DataTables & Logic
+  //- SCRIPTS
   script(src="https://code.jquery.com/jquery-3.7.0.js")
   script(src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js")
   script(src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js")
   
   script.
     $(document).ready(function() {
-        $('#productTable').DataTable({
-            "paging": true,
-            "lengthChange": false, // Sembunyikan 'show entries' agar ringkas di HP
-            "searching": true,
-            "ordering": true,
-            "info": false,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "search": "",
-                "searchPlaceholder": "Cari produk...",
-                "paginate": {
-                    "previous": "«",
-                    "next": "»"
-                }
-            }
-        });
-
-        // Memindahkan kotak pencarian agar lebih rapi di HP
-        $('.dataTables_filter').addClass('w-100 mb-3');
-        $('.dataTables_filter input').addClass('form-control w-100');
+      $('#productTable').DataTable({
+        "pageLength": 8,
+        "lengthChange": false,
+        "dom": 'ftip',
+        "language": { "search": "", "searchPlaceholder": "🔍 Cari produk..." }
+      });
     });
 
     let cart = [];
 
-    function addToCart(id, nama, harga, stok) {
-        const existing = cart.find(item => item.id === id);
-        if (existing) {
-            if (existing.qty + 1 > stok) return alert("Stok tidak mencukupi!");
-            existing.qty += 1;
-            existing.subtotal = existing.qty * harga;
-        } else {
-            cart.push({ id, nama, harga, qty: 1, subtotal: harga });
-        }
-        renderCart();
+    function addToCart(id, nama, harga, stokAsli) {
+      const existing = cart.find(item => item.id === id);
+      let inCartQty = existing ? existing.qty : 0;
+
+      if (inCartQty + 1 > stokAsli) return;
+
+      if (existing) {
+        existing.qty += 1;
+        existing.subtotal = existing.qty * harga;
+      } else {
+        cart.push({ id, nama, harga, qty: 1, subtotal: harga });
+      }
+
+      updateStockUI(id, stokAsli, inCartQty + 1);
+      renderCart();
+      if ("vibrate" in navigator) navigator.vibrate(20);
+    }
+
+    function updateStockUI(id, total, diKeranjang) {
+      const el = document.getElementById(`stock-display-${id}`);
+      if(el) {
+        const sisa = total - diKeranjang;
+        el.innerText = sisa;
+        el.className = `badge rounded-pill ${sisa <= 5 ? 'bg-danger' : (sisa <= 15 ? 'bg-warning text-dark' : 'bg-success')}`;
+      }
     }
 
     function removeItem(index) {
-        cart.splice(index, 1);
-        renderCart();
+      const item = cart[index];
+      const badge = document.getElementById(`stock-display-${item.id}`);
+      if(badge) badge.innerText = parseInt(badge.innerText) + item.qty;
+      
+      cart.splice(index, 1);
+      renderCart();
     }
 
     function renderCart() {
-        const tbody = document.querySelector('#cartTable tbody');
-        const emptyCart = document.getElementById('emptyCart');
-        const form = document.getElementById('checkoutForm');
-        
-        tbody.innerHTML = '';
-        document.querySelectorAll('.item-hidden').forEach(e => e.remove());
-        
-        if (cart.length === 0) {
-            emptyCart.style.display = 'block';
-        } else {
-            emptyCart.style.display = 'none';
-        }
-
-        let total = 0;
+      const container = document.getElementById('cartList');
+      const empty = document.getElementById('emptyCart');
+      container.innerHTML = '';
+      
+      if (cart.length === 0) {
+        empty.classList.remove('d-none');
+      } else {
+        empty.classList.add('d-none');
         cart.forEach((item, index) => {
-            total += item.subtotal;
-            tbody.innerHTML += `
-              <tr class="border-bottom-0">
-                <td>
-                  <div class="fw-bold small">${item.nama}</div>
-                  <div class="text-muted small">@${item.harga.toLocaleString()}</div>
-                </td>
-                <td class="text-center">x${item.qty}</td>
-                <td class="text-end fw-bold">Rp ${item.subtotal.toLocaleString()}</td>
-                <td class="text-end">
-                  <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeItem(${index})">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            `;
-
-            const inputId = `<input type="hidden" name="items[${index}][id]" value="${item.id}" class="item-hidden">`;
-            const inputQty = `<input type="hidden" name="items[${index}][qty]" value="${item.qty}" class="item-hidden">`;
-            form.insertAdjacentHTML('beforeend', inputId + inputQty);
+          container.innerHTML += `
+            <div class="cart-item">
+              <div>
+                <div class="fw-bold small">${item.nama}</div>
+                <div class="text-muted small">Rp ${item.harga.toLocaleString()} x ${item.qty}</div>
+              </div>
+              <div class="d-flex align-items-center">
+                <span class="fw-bold me-3">Rp ${item.subtotal.toLocaleString()}</span>
+                <button class="btn btn-sm btn-light text-danger" onclick="removeItem(${index})">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+          `;
         });
+      }
 
-        document.getElementById('grandTotalDisplay').innerText = "Rp " + total.toLocaleString();
-        hitungKembalian();
+      const total = cart.reduce((sum, i) => sum + i.subtotal, 0);
+      document.getElementById('grandTotalDisplay').innerText = "Rp " + total.toLocaleString('id-ID');
+      hitungKembalian();
     }
 
     function hitungKembalian() {
-        const totalText = document.getElementById('grandTotalDisplay').innerText.replace(/\D/g, '');
-        const total = parseInt(totalText) || 0;
-        const bayar = parseInt(document.getElementById('inputBayar').value) || 0;
-        const kembalian = bayar - total;
-        
-        const displayKembalian = document.getElementById('displayKembalian');
-        displayKembalian.innerText = "Rp " + (kembalian < 0 ? 0 : kembalian).toLocaleString();
-        
-        const btnBayar = document.getElementById('btnBayar');
-        btnBayar.disabled = (cart.length === 0 || bayar < total || total === 0);
-        
-        if (bayar < total && bayar > 0) {
-            displayKembalian.classList.replace('text-success', 'text-danger');
-        } else {
-            displayKembalian.classList.replace('text-danger', 'text-success');
-        }
+      const total = parseInt(document.getElementById('grandTotalDisplay').innerText.replace(/\D/g, '')) || 0;
+      const bayar = parseInt(document.getElementById('inputBayar').value) || 0;
+      const kembalian = bayar - total;
+      
+      const display = document.getElementById('displayKembalian');
+      display.innerText = "Rp " + (kembalian < 0 ? 0 : kembalian).toLocaleString('id-ID');
+      
+      const btn = document.getElementById('btnBayar');
+      btn.disabled = !(bayar >= total && total > 0);
+      display.className = `fw-bold mb-0 ${bayar >= total ? 'text-success' : 'text-danger'}`;
     }
-    
-    
+
+    async function prosesTransaksi() {
+      const btn = document.getElementById('btnBayar');
+      const tunai = document.getElementById('inputBayar').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
+
+      try {
+        const response = await fetch('/transaksi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: cart, tunai: tunai })
+        });
+        const res = await response.json();
+        if (res.success) window.location.href = `/struk/${res.trxId}`;
+        else alert(res.message);
+      } catch (e) {
+        alert("Koneksi Error");
+        btn.disabled = false;
+      }
+    }

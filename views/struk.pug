@@ -1,46 +1,78 @@
 doctype html
 html
   head
-    title Struk Belanja
+    title Struk Belanja - #{trx._id.toString().slice(-6).toUpperCase()}
     style.
-      body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 10px; font-size: 12px; }
+      body { 
+        font-family: 'Courier New', monospace; 
+        width: 80mm; 
+        margin: 0 auto; 
+        padding: 10px; 
+        font-size: 12px; 
+        color: #000;
+      }
       .text-center { text-align: center; }
       .dashed-line { border-bottom: 1px dashed #000; margin: 10px 0; }
       .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
       .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 10px; }
-      @media print { .no-print { display: none; } }
+      
+      /* Pengaturan khusus saat cetak */
+      @media print { 
+        .no-print { display: none; } 
+        body { width: 100%; margin: 0; padding: 0; }
+      }
+
   body
     .text-center
-      strong TITIK SERU!!!
+      strong(style="font-size: 16px;") TITIK SERU!!!
       br
-      | Jl. Sam Ratulangi Malompo Nabire Papua Tengah
+      | Jl. Sam Ratulangi Malompo Nabire
+      br
+      | Papua Tengah
       br
       | Wa: 0821-8816-0867
       .dashed-line
 
-    p No: #{trx._id.toString().slice(-6).toUpperCase()}
-    p Tgl: #{trx.tanggal.toLocaleString('id-ID')}
+    div(style="margin-bottom: 5px;")
+      | No : #{trx._id.toString().slice(-6).toUpperCase()}
+      br
+      | Tgl: #{trx.tanggal.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
     .dashed-line
 
+    //- Daftar Item
     each item in trx.items
-      div
+      div(style="margin-bottom: 8px;")
         div= item.nama
         .item-row
-          span #{item.qty} x #{item.harga.toLocaleString()}
-          span= item.subtotal.toLocaleString()
+          span #{item.qty} x #{item.harga.toLocaleString('id-ID')}
+          span= (item.qty * item.harga).toLocaleString('id-ID')
     
     .dashed-line
     .total-row
       span TOTAL
-      span Rp#{trx.totalBayar.toLocaleString()}
+      span Rp#{trx.totalBayar.toLocaleString('id-ID')}
     
     .dashed-line
     .text-center
-      p Terima Kasih
-      p Barang yang sudah dibeli
-      p tidak dapat ditukar/dikembalikan.
+      p(style="margin-bottom: 5px;") Terima Kasih
+      p(style="font-size: 10px;") Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.
     
-    .no-print(style="margin-top: 20px; text-align: center;")
-      button(onclick="window.print()") Cetak (CTRL+P)
+    //- Tombol Navigasi (Hanya muncul di layar, tidak saat dicetak)
+    .no-print(style="margin-top: 30px; border-top: 1px solid #ccc; pt-3; text-align: center;")
+      button(onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; margin-bottom: 10px;") 
+        i.bi.bi-printer 
+        |  Cetak Manual
       br
-      a(href="/") Kembali ke Kasir
+      a(href="/" style="text-decoration: none; color: #007bff; font-weight: bold;") ⬅ Kembali ke Kasir
+
+    //- SCRIPT OTOMATIS CETAK
+    script.
+      // Begitu halaman selesai dimuat, dialog cetak langsung muncul
+      window.onload = function() {
+        window.print();
+        
+        // Opsional: Jika ingin otomatis kembali ke kasir setelah cetak selesai/cancel
+        window.onafterprint = function() {
+        window.location.href = '/';
+        };
+      }
