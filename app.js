@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const ExcelJS = require('exceljs');
 
+
 // Import Models
 const Product = require('./models/Product');
 const Transaction = require('./models/Transaction');
@@ -17,6 +18,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true })); // Penting: true agar bisa baca array/object dari form
 app.use(express.json());
+app.use(express.static('public'));
+app.use(express.static('public/images'));
 
 // Koneksi MongoDB Atlas
 // const dbURI = 'mongodb+srv://futsal_db_user:mkmg@cluster0.1ohinel.mongodb.net/?appName=Cluster0'; 
@@ -170,5 +173,4 @@ if (process.env.NODE_ENV !== 'production') {
     const PORT = 3000;
     app.listen(PORT, () => console.log(`Server on: http://localhost:${PORT}`));
 }
-
 module.exports = app; // PENTING untuk Vercel
