@@ -21,10 +21,13 @@ app.use(express.json());
 // Koneksi MongoDB Atlas
 // const dbURI = 'mongodb+srv://futsal_db_user:mkmg@cluster0.1ohinel.mongodb.net/?appName=Cluster0'; 
 // mongoose.connect(dbURI)
-const dbURI = process.env.MONGODB_URI; // Ambil dari environment variable
-mongoose.connect(dbURI)
-    .then(() => console.log('✅ Terhubung ke MongoDB Atlas'))
-    .catch(err => console.error('❌ Gagal koneksi DB:', err));
+const dbURI = process.env.MONGODB_URI;
+
+mongoose.connect(dbURI, {
+    serverSelectionTimeoutMS: 5000 // Berhenti mencoba setelah 5 detik jika gagal
+})
+.then(() => console.log('✅ Berhasil konek ke MongoDB'))
+.catch(err => console.error('❌ Gagal konek:', err));
 
 // ==========================================
 // ROUTE KASIR (FRONT-END)
