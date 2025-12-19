@@ -5,12 +5,12 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const ExcelJS = require('exceljs');
 
-
 // Import Models
 const Product = require('./models/Product');
 const Transaction = require('./models/Transaction');
 
 const app = express();
+
 
 // Konfigurasi Express & View Engine
 app.set('view engine', 'pug');
@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // Penting: true agar bisa b
 app.use(express.json());
 app.use(express.static('public'));
 app.use(express.static('public/images'));
+app.set('view cache', false);
 
 // Koneksi MongoDB Atlas
 // const dbURI = 'mongodb+srv://futsal_db_user:mkmg@cluster0.1ohinel.mongodb.net/?appName=Cluster0'; 
