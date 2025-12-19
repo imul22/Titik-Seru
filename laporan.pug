@@ -1,0 +1,81 @@
+extends ../layout
+
+block content
+  //- CSS DataTables untuk Laporan
+  link(rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css")
+  
+  style.
+    .stat-card { border: none; border-radius: 15px; transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .icon-circle { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .table-vcenter td { vertical-align: middle; }
+
+  .d-flex.justify-content-between.flex-wrap.align-items-center.pt-3.pb-2.mb-4.border-bottom
+    h2.fw-bold 📊 Laporan Penjualan
+    a.btn.btn-outline-success.fw-bold(href="/admin/export-excel") 
+      i.bi.bi-file-earmark-excel-fill.me-2
+      | Export Excel
+
+  //- Dashboard Stats
+  .row.g-3.mb-5
+    .col-md-6.col-lg-6
+      .card.stat-card.bg-success.text-white.shadow-sm
+        .card-body.d-flex.align-items-center
+          .icon-circle.me-3
+            i.bi.bi-cash-coin
+          div
+            h6.mb-0.opacity-75 Omzet Hari Ini
+            h2.fw-bold.mb-0 Rp #{harian.total.toLocaleString('id-ID')}
+            small #{harian.count} Transaksi Berhasil
+
+    .col-md-6.col-lg-6
+      .card.stat-card.bg-primary.text-white.shadow-sm
+        .card-body.d-flex.align-items-center
+          .icon-circle.me-3
+            i.bi.bi-calendar-check
+          div
+            h6.mb-0.opacity-75 Omzet Bulan Ini
+            h2.fw-bold.mb-0 Rp #{bulanan.total.toLocaleString('id-ID')}
+            small #{bulanan.count} Transaksi Berhasil
+
+  //- Riwayat Transaksi
+  .card.border-0.shadow-sm.rounded-3
+    .card-header.bg-white.py-3
+      h5.mb-0.fw-bold 🕒 50 Transaksi Terakhir
+    .card-body
+      .table-responsive
+        table.table.table-hover.table-vcenter#historyTable
+          thead.table-light
+            tr
+              th Waktu Transaksi
+              th Total Bayar
+              th.text-center Aksi
+          tbody
+            each trx in history
+              tr
+                td
+                  .fw-bold= trx.tanggal.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                  small.text-muted= trx.tanggal.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIT'
+                td.fw-bold.text-success Rp #{trx.totalBayar.toLocaleString('id-ID')}
+                td.text-center
+                  a.btn.btn-sm.btn-light.border(href=`/struk/${trx._id}` target="_blank")
+                    i.bi.bi-receipt.me-1
+                    | Struk
+
+  //- Scripts
+  script(src="https://code.jquery.com/jquery-3.7.0.js")
+  script(src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js")
+  script(src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js")
+  
+  script.
+    $(document).ready(function() {
+      $('#historyTable').DataTable({
+        "order": [[ 0, "desc" ]], // Urutan terbaru di atas
+        "pageLength": 10,
+        "lengthChange": false,
+        "language": {
+          "search": "Cari Transaksi:",
+          "searchPlaceholder": "Tanggal atau nominal..."
+        }
+      });
+    });

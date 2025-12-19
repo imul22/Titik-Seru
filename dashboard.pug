@@ -1,74 +1,113 @@
 extends ../layout
 
 block content
-  // CSS DataTables
+  //- CSS Khusus Admin: Fokus pada Kebersihan & Spacing
   link(rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css")
-  
-  .d-flex.justify-content-between.flex-wrap.flex-md-nowrap.align-items-center.pt-3.pb-2.mb-3.border-bottom
-    h1.h2 📦 Manajemen Inventori
-    .btn-toolbar.mb-2.mb-md-0
-      a.btn.btn-sm.btn-outline-secondary(href="/admin/laporan")
-        i.bi.bi-graph-up.me-1
-        | Lihat Laporan
+  style.
+    body { background-color: #f4f7fa; color: #334155; font-family: 'Inter', sans-serif; }
+    
+    /* Card & Container */
+    .admin-card { border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.03); background: white; }
+    .container-fluid { max-width: 1400px; }
 
-  .row
-    // Form Tambah Produk Baru
-    .col-lg-7.col-12.mb-3
-      .card.shadow-sm.border-0.mb-4
-        .card-header.bg-dark.text-white.py-3
-          h6.mb-0 Tambah Produk Baru
-        .card-body
-          form(action="/admin/add-product" method="POST")
-            .mb-3
-              label.form-label Nama Produk
-              input.form-control(name="nama" placeholder="Contoh: Kopi Susu" required)
-            .mb-3
-              label.form-label Harga Jual (Rp)
-              input.form-control(name="harga" type="number" placeholder="0" required)
-            .mb-3
-              label.form-label Stok Awal
-              input.form-control(name="stok" type="number" placeholder="0" required)
-            .mb-3
-              label.form-label Kategori
-              select.form-select(name="kategori")
-                option(value="Makanan") Makanan
-                option(value="Minuman") Minuman
-                option(value="Lain-lain" selected) Lain-lain
-            button.btn.btn-primary.w-100.py-2(type="submit")
-              i.bi.bi-plus-circle.me-2
-              | Simpan Produk
+    /* DataTables UI Cleanup */
+    .dataTables_wrapper .dataTables_filter { float: left !important; text-align: left !important; width: 100%; }
+    .dataTables_filter input { 
+      border-radius: 50px; border: 1px solid #e2e8f0; padding: 10px 20px 10px 40px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 15px center;
+      width: 100% !important; max-width: 400px; transition: 0.3s; margin-bottom: 20px;
+    }
 
-    // Tabel Update Stok & Harga
-    .col-lg-8
-      .card.shadow-sm.border-0
-        .card-header.bg-white.py-3
-          h6.mb-0.fw-bold Daftar Stok & Kendali Harga
-        .card-body
-          .table-responsive
-            table#adminProductTable.table.table-hover.align-middle(style="width:100%")
-              thead.table-light
-                tr
-                  th Produk
-                  th Harga (Rp)
-                  th Stok
-                  th.text-center Aksi
-              tbody
-                each p in products
+    /* Table Styling */
+    table.dataTable { border: none !important; margin-bottom: 20px !important; }
+    table.dataTable thead th { 
+      background-color: #f8fafc !important; color: #64748b;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+      padding: 15px !important; border-bottom: 2px solid #f1f5f9 !important;
+    }
+    table.dataTable tbody td { padding: 12px 15px !important; border-bottom: 1px solid #f1f5f9 !important; vertical-align: middle; }
+    
+    /* Input Table Styling */
+    .input-table { 
+      border: 1px solid transparent; background: transparent; 
+      padding: 6px 10px; border-radius: 6px; width: 100%; transition: 0.2s;
+    }
+    .input-table:hover { background: #f8fafc; border-color: #e2e8f0; }
+    .input-table:focus { background: #fff; border-color: #0d6efd; outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.1); }
+
+  .container-fluid.py-4
+    //- Header Navigasi
+    .d-flex.justify-content-between.align-items-center.mb-4.pb-3.border-bottom
+      h3.fw-bold.m-0 📦 Manajemen Inventori
+      .btn-toolbar
+        a.btn.btn-sm.btn-outline-secondary.me-2(href="/admin/laporan")
+          i.bi.bi-graph-up.me-1
+          | Lihat Laporan
+        a.btn.btn-sm.btn-outline-primary(href="/")
+          i.bi.bi-house-door.me-1
+          | Beranda Kasir
+
+    .row.g-4
+      //- SISI KIRI: FORM TAMBAH
+      .col-xl-4
+        .card.admin-card
+          .card-header.bg-white.text-black.py-3(style="border-radius: 12px 12px 0 0")
+            h6.mb-0.fw-bold ➕ Tambah Produk
+          .card-body.p-4
+            form(action="/admin/add-product" method="POST")
+              .mb-3
+                label.form-label.small.text-muted.fw-bold Nama Produk
+                input.form-control(name="nama" placeholder="Ketik nama barang..." required)
+              .row.g-3
+                .col-6
+                  .mb-3
+                    label.form-label.small.text-muted.fw-bold Harga (Rp)
+                    input.form-control(name="harga" type="number" placeholder="0" required)
+                .col-6
+                  .mb-3
+                    label.form-label.small.text-muted.fw-bold Stok
+                    input.form-control(name="stok" type="number" placeholder="0" required)
+              .mb-4
+                label.form-label.small.text-muted.fw-bold Kategori
+                select.form-select(name="kategori")
+                  option(value="Makanan") Makanan
+                  option(value="Minuman") Minuman
+                  option(value="Lain-lain" selected) Lain-lain
+              button.btn.btn-primary.w-100.py-2.fw-bold(type="submit")
+                | Simpan ke Database
+
+      //- SISI KANAN: TABEL KONTROL
+      .col-xl-8
+        .card.admin-card
+          .card-body.p-4
+            .table-responsive
+              table#adminProductTable.table.w-100
+                thead
                   tr
-                    form(action="/admin/update-product" method="POST")
-                      input(type="hidden" name="id" value=p._id)
-                      td
-                        input.form-control.form-control-sm(name="nama" value=p.nama required)
-                      td
-                        input.form-control.form-control-sm(name="harga" type="number" value=p.harga required style="max-width: 120px;")
-                      td
-                        input.form-control.form-control-sm(name="stok" type="number" value=p.stok required style="max-width: 80px;")
+                    th(style="width: 40%") Produk
+                    th(style="width: 25%") Harga (Rp)
+                    th.text-center(style="width: 15%") Stok
+                    th.text-center(style="width: 10%") Aksi
+                    th(style="width: 10%")
+                tbody
+                  each p in products
+                    tr
+                      form(action="/admin/update-product" method="POST")
+                        input(type="hidden" name="id" value=p._id)
+                        td
+                          input.input-table.fw-bold(name="nama" value=p.nama)
+                        td
+                          input.input-table(name="harga" type="number" value=p.harga)
+                        td.text-center
+                          input.input-table.text-center(name="stok" type="number" value=p.stok)
+                        td.text-center
+                          button.btn.btn-sm.btn-warning.rounded-pill.px-3.fw-bold(type="submit") Update
                       td.text-center
-                        button.btn.btn-warning.btn-sm.rounded-pill.px-3(type="submit")
-                          i.bi.bi-pencil-square.me-1
-                          | Update
+                        form(action="/admin/delete-product" method="POST" onsubmit="return confirm('Hapus produk ini?')")
+                          input(type="hidden" name="id" value=p._id)
+                          button.btn.btn-link.text-danger.p-0(type="submit")
+                            i.bi.bi-trash3
 
-  // Scripts DataTables
   script(src="https://code.jquery.com/jquery-3.7.0.js")
   script(src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js")
   script(src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js")
@@ -76,17 +115,12 @@ block content
   script.
     $(document).ready(function() {
         $('#adminProductTable').DataTable({
-            "language": {
-                "search": "Cari Barang:",
-                "lengthMenu": "Tampilkan _MENU_",
-                "zeroRecords": "Barang tidak ditemukan",
-                "info": "Menampilkan _TOTAL_ barang",
-                "paginate": {
-                    "next": "→",
-                    "previous": "←"
-                }
-            },
+            "dom": '<"top"f>rt<"bottom"ip>',
             "pageLength": 10,
-            "order": [[ 0, "asc" ]] // Urutkan berdasarkan nama
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Cari produk dalam inventori...",
+                "paginate": { "next": "→", "previous": "←" }
+            }
         });
     });
