@@ -5,40 +5,42 @@ block content
   link(rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css")
   
   .d-flex.justify-content-between.flex-wrap.flex-md-nowrap.align-items-center.pt-3.pb-2.mb-3.border-bottom
-    h1.h2 Kasir TITIK SERU!!!
     span.badge.bg-dark.p-2= new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   .row
-    // Bagian Kiri: Katalog Produk (DataTable)
-    .col-lg-7
+    .col-lg-7.col-12.mb-3
       .card.shadow-sm.border-0.rounded-3
-        .card-header.bg-white.py-3
-          h5.mb-0.fw-bold 📦 Katalog Produk
+        .card-header.bg-primary.text-white.py-3
+          h5.mb-0.fw-bold 📦 Produk
         .card-body
           .table-responsive
-            table#productTable.table.table-hover.align-middle(style="width:100%")
-              thead.table-light
+            table.table.table-hover#productTable
+              thead.bg-light
                 tr
-                  th Nama Barang
+                  th Produk
                   th Harga
-                  th Stok
-                  th.text-center Aksi
+                  th.text-end Stok
               tbody
                 each p in products
-                  tr
+                  //- Kita tambahkan pengecekan: jika stok 0, baris tidak bisa diklik
+                  tr.clickable-row(
+                    class=(p.stok <= 0 ? 'table-secondary opacity-50' : '')
+                    onclick=(p.stok > 0 ? `addToCart('${p._id}', '${p.nama}', ${p.harga}, ${p.stok})` : "alert('Stok Habis!')")
+                    style="cursor: pointer;"
+                  )
                     td
-                      div.fw-bold= p.nama
-                      small.text-muted Kategori: #{p.kategori || 'Umum'}
-                    td.text-primary.fw-bold Rp #{p.harga.toLocaleString()}
-                    td
-                      if p.stok < 10
-                        span.badge.bg-danger= p.stok
+                      .fw-bold= p.nama
+                      if p.stok <= 0
+                        span.badge.bg-danger.sm Stok Habis
                       else
-                        span.badge.bg-success= p.stok
-                    td.text-center
-                      button.btn.btn-outline-primary.btn-sm.rounded-pill(onclick=`addToCart("${p._id}", "${p.nama}", ${p.harga}, ${p.stok})`)
-                        i.bi.bi-plus-lg.me-1
-                        | Tambah
+                        small.text-muted.d-md-none Tap untuk tambah
+                    td Rp #{p.harga.toLocaleString()}
+                    td.text-end
+                      //- Menampilkan stok dengan warna dinamis
+                      span.badge(
+                        id=`stock-display-${p._id}`
+                        class=(p.stok <= 5 ? 'bg-danger' : (p.stok <= 15 ? 'bg-warning text-dark' : 'bg-success'))
+                      )= p.stok
 
     // Bagian Kanan: Keranjang Belanja
     .col-lg-5
@@ -86,18 +88,26 @@ block content
   script.
     $(document).ready(function() {
         $('#productTable').DataTable({
+            "paging": true,
+            "lengthChange": false, // Sembunyikan 'show entries' agar ringkas di HP
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "responsive": true,
             "language": {
-                "search": "Cari Produk:",
-                "lengthMenu": "Tampilkan _MENU_ data",
-                "zeroRecords": "Produk tidak ditemukan",
-                "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ produk",
+                "search": "",
+                "searchPlaceholder": "Cari produk...",
                 "paginate": {
-                    "next": "→",
-                    "previous": "←"
+                    "previous": "«",
+                    "next": "»"
                 }
-            },
-            "pageLength": 10
+            }
         });
+
+        // Memindahkan kotak pencarian agar lebih rapi di HP
+        $('.dataTables_filter').addClass('w-100 mb-3');
+        $('.dataTables_filter input').addClass('form-control w-100');
     });
 
     let cart = [];
@@ -179,3 +189,5 @@ block content
             displayKembalian.classList.replace('text-danger', 'text-success');
         }
     }
+    
+    
