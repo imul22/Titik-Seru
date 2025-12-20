@@ -82,8 +82,8 @@ block content
               h3#grandTotalDisplay.fw-bold.text-primary Rp 0
             
             .form-group.mb-3
-              label.small.fw-bold.mb-1 Nominal Tunai
-              .input-group
+              label.small.fw-bold Nominal Tunai (Rp)
+              .input-group#cashInputSection
                 span.input-group-text.bg-white.border-end-0 Rp
                 input#inputBayar.form-control.form-control-lg.border-start-0.fw-bold(
                   type="number" 
@@ -94,8 +94,24 @@ block content
             .d-flex.justify-content-between.align-items-center.mb-4
               span.text-muted Kembalian
               h5#displayKembalian.fw-bold.mb-0 Rp 0
+            //- Tambahkan di bagian Footer Keranjang (di atas input bayar)
+            .mb-3
+              label.small.fw-bold Metode Pembayaran
+              .d-flex.gap-2.mt-1
+                input#payCash.btn-check(type="radio" name="paymentMethod" value="Tunai" checked onchange="togglePaymentUI()")
+                label.btn.btn-outline-primary.w-50.rounded-3(for="payCash") 💵 Tunai
+                
+                input#payQRIS.btn-check(type="radio" name="paymentMethod" value="QRIS" onchange="togglePaymentUI()")
+                label.btn.btn-outline-primary.w-50.rounded-3(for="payQRIS") 📱 QRIS
 
-            button#btnBayar.btn.btn-success.btn-lg.w-100.py-3.btn-checkout(type="button" onclick="prosesTransaksi()" disabled)
+            //- Tampilan QRIS (Hanya muncul jika pilih QRIS)
+            #qrisSection.mb-3.text-center.d-none
+              .p-3.border.rounded-3.bg-light
+                i.bi.bi-qr-code-scan.display-1
+                p.small.text-muted.mt-2 Silahkan Scan QRIS di Kasir
+                span.badge.bg-success LUNAS OTOMATIS (Simulasi)
+
+            button#btnBayar.btn.btn-success.btn-lg.w-100.py-2.btn-checkout(type="button" onclick="prosesTransaksi()" disabled)
               i.bi.bi-check2-circle.me-2
               | SELESAIKAN TRANSAKSI
 
@@ -200,6 +216,8 @@ block content
     async function prosesTransaksi() {
       const btn = document.getElementById('btnBayar');
       const tunai = document.getElementById('inputBayar').value;
+      const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+      const totalVal = parseInt(document.getElementById('grandTotalDisplay').innerText.replace(/\D/g, ''));
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menyimpan...';
@@ -208,7 +226,12 @@ block content
         const response = await fetch('/transaksi', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: cart, tunai: tunai })
+          body: JSON.stringify({ 
+                items: cart, 
+                tunai: tunai, // Dikirim ke backend
+                metode: method,  // Dikirim ke backend
+                total: totalVal 
+            })
         });
         const res = await response.json();
         if (res.success) window.location.href = `/struk/${res.trxId}`;
@@ -241,3 +264,59 @@ block content
 
     // Panggil sekali di awal agar tidak menunggu 1 detik pertama
     updateClock();
+
+    // Fungsi untuk ganti tampilan antara Tunai dan QRIS
+    function togglePaymentUI() {
+        const isQRIS = document.getElementById('payQRIS').checked;
+        const cashSection = document.getElementById('cashInputSection');
+        const qrisSection = document.getElementById('qrisSection');
+        const btnBayar = document.getElementById('btnBayar');
+
+        if (isQRIS) {
+            cashSection.classList.add('d-none');
+            qrisSection.classList.remove('d-none');
+            btnBayar.disabled = false; // QRIS dianggap langsung bayar pas
+            document.getElementById('displayKembalian').innerText = "Rp 0";
+        } else {
+            cashSection.classList.remove('d-none');
+            qrisSection.classList.add('d-none');
+            hitungKembalian(); // Hitung ulang berdasarkan input tunai
+        }
+    }
+
+    // Update fungsi bayar agar mengirim data metode pembayaran
+    async function prosesTransaksi() {
+        const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+        const total = parseInt(document.getElementById('grandTotalDisplay').innerText.replace(/\D/g, ''));
+        const tunai = method === 'Tunai' ? document.getElementById('inputBayar').value : total;
+
+        const btn = document.getElementById('btnBayar');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memproses...';
+
+        try {
+            const res = await fetch('/transaksi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    items: cart, 
+                    tunai: tunai,
+                    metode: method,
+                    total: total
+                })
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                // FLEKSIBILITAS CETAK: Buka halaman struk di tab baru khusus cetak
+                const printWindow = window.open(`/struk/${result.trxId}`, '_blank');
+                // Tunggu sebentar lalu refresh halaman kasir untuk transaksi baru
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        } catch (err) {
+            alert("Gagal memproses transaksi");
+            btn.disabled = false;
+        }
+    }

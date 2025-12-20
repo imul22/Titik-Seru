@@ -25,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 // ==========================================
 // KONEKSI MONGODB
 // ==========================================
+// const dbURI = 'mongodb+srv://futsal_db_user:mkmg@cluster0.1ohinel.mongodb.net/?appName=Cluster0'; 
+// mongoose.connect(dbURI)
 const dbURI = process.env.MONGODB_URI;
 mongoose.connect(dbURI, {
     serverSelectionTimeoutMS: 5000
@@ -49,7 +51,9 @@ app.get('/', async (req, res) => {
 // Proses Transaksi (Versi Modern Fetch API)
 app.post('/transaksi', async (req, res) => {
     try {
-        const { items } = req.body;
+        // 1. TAMBAHKAN tunai DAN metode DI SINI
+        const { items, tunai, metode } = req.body; 
+        
         if (!items || items.length === 0) {
             return res.status(400).json({ success: false, message: "Keranjang kosong" });
         }
@@ -57,11 +61,9 @@ app.post('/transaksi', async (req, res) => {
         let totalBayar = 0;
         let processedItems = [];
 
-        // Gunakan loop for...of untuk mendukung async/await dengan benar
         for (const item of items) {
             const product = await Product.findById(item.id);
             if (product && product.stok >= item.qty) {
-                // Kurangi stok permanen
                 product.stok -= item.qty;
                 await product.save();
 
@@ -76,9 +78,12 @@ app.post('/transaksi', async (req, res) => {
             }
         }
 
+        // 2. MASUKKAN tunai DAN metode KE DALAM DATABASE
         const savedTrx = await Transaction.create({
             items: processedItems,
             totalBayar: totalBayar,
+            tunai: Number(tunai), // Simpan sebagai angka
+            metode: metode || 'Tunai', // Simpan metode bayar
             tanggal: new Date()
         });
 
@@ -195,6 +200,5 @@ if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
 }
-
 
 module.exports = app;
