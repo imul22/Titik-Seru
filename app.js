@@ -25,8 +25,6 @@ app.use(express.urlencoded({ extended: true }));
 // ==========================================
 // KONEKSI MONGODB
 // ==========================================
-// const dbURI = 'mongodb+srv://futsal_db_user:mkmg@cluster0.1ohinel.mongodb.net/?appName=Cluster0'; 
-// mongoose.connect(dbURI)
 const dbURI = process.env.MONGODB_URI;
 mongoose.connect(dbURI, {
     serverSelectionTimeoutMS: 5000
@@ -197,5 +195,6 @@ if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
 }
+
 
 module.exports = app;
