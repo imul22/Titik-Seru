@@ -1,78 +1,120 @@
 doctype html
 html
   head
-    title Struk Belanja - #{trx._id.toString().slice(-6).toUpperCase()}
+    title Struk - #{trx._id.toString().slice(-6).toUpperCase()}
     style.
+      /* Pengaturan Dasar untuk Printer Thermal */
+      * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+      
       body { 
-        font-family: 'Courier New', monospace; 
-        width: 80mm; 
+        width: 58mm; 
         margin: 0 auto; 
-        padding: 10px; 
-        font-size: 12px; 
+        padding: 5px; 
+        font-size: 11px; 
         color: #000;
       }
+
       .text-center { text-align: center; }
-      .dashed-line { border-bottom: 1px dashed #000; margin: 10px 0; }
-      .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-      .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 10px; }
+      .text-right { text-align: right; }
+      .fw-bold { font-weight: bold; }
       
-      /* Pengaturan khusus saat cetak */
-      @media print { 
-        .no-print { display: none; } 
-        body { width: 100%; margin: 0; padding: 0; }
+      .header-toko { margin-bottom: 10px; line-height: 1.2; }
+      .header-toko strong { font-size: 14px; }
+      
+      .dashed-line { border-bottom: 1px dashed #000; margin: 5px 0; width: 100%; }
+      
+      .info-transaksi { font-size: 10px; margin-bottom: 5px; width: 100%; }
+      .info-transaksi td { vertical-align: top; }
+
+      .tabel-item { width: 100%; border-collapse: collapse; margin: 5px 0; }
+      .tabel-item td { padding: 2px 0; vertical-align: top; }
+      
+      .total-section { width: 100%; margin-top: 5px; }
+      .total-row { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; }
+
+      @media print {
+        @page { margin: 0; }
+        .no-print { display: none !important; }
+        body { width: 100%; margin: 0; padding: 2mm; }
+      }
+
+      .logo-container { text-align: center; margin-bottom: 5px; }
+      .logo-img { 
+        width: 25mm;
+        height: auto;
+        filter: grayscale(100%) contrast(150%);
       }
 
   body
-    .text-center
-      strong(style="font-size: 16px;") TITIK SERU!!!
+  
+    //- .logo-container
+    //-   img.logo-img(src="/images/titik.png" alt="Logo")
+    .text-center.header-toko
+      strong TITIK SERU!!!
       br
-      | Jl. Sam Ratulangi Malompo Nabire
+      | Malompo Nabire, Papua Tengah
       br
-      | Papua Tengah
-      br
-      | Wa: 0821-8816-0867
-      .dashed-line
-
-    div(style="margin-bottom: 5px;")
-      | No : #{trx._id.toString().slice(-6).toUpperCase()}
-      br
-      | Tgl: #{trx.tanggal.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
-    .dashed-line
-
-    //- Daftar Item
-    each item in trx.items
-      div(style="margin-bottom: 8px;")
-        div= item.nama
-        .item-row
-          span #{item.qty} x #{item.harga.toLocaleString('id-ID')}
-          span= (item.qty * item.harga).toLocaleString('id-ID')
+      | WA: 0821-8816-0867
     
     .dashed-line
-    .total-row
-      span TOTAL
-      span Rp#{trx.totalBayar.toLocaleString('id-ID')}
+
+    table.info-transaksi
+      tr
+        td(style="width: 25%") No
+        td : #{trx._id.toString().slice(-6).toUpperCase()}
+      tr
+        td Tgl
+        td : #{new Date(trx.tanggal).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }).replace(/\./g, ':')}
     
     .dashed-line
-    .text-center
-      p(style="margin-bottom: 5px;") Terima Kasih
-      p(style="font-size: 10px;") Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.
-    
-    //- Tombol Navigasi (Hanya muncul di layar, tidak saat dicetak)
-    .no-print(style="margin-top: 30px; border-top: 1px solid #ccc; pt-3; text-align: center;")
-      button(onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; margin-bottom: 10px;") 
-        i.bi.bi-printer 
-        |  Cetak Manual
-      br
-      a(href="/" style="text-decoration: none; color: #007bff; font-weight: bold;") ⬅ Kembali ke Kasir
 
-    //- SCRIPT OTOMATIS CETAK
+    table.tabel-item
+      each item in trx.items
+        tr
+          td(colspan="2" style="text-transform: uppercase; font-weight: bold;")= item.nama
+        tr
+          td(style="padding-left: 5px; color: #333;") #{item.qty} x #{Number(item.harga).toLocaleString('id-ID')}
+          td.text-right= (Number(item.qty) * Number(item.harga)).toLocaleString('id-ID')
+    
+    .dashed-line
+
+    .total-section
+      //- Baris Total
+      .total-row.fw-bold
+        span TOTAL
+        span Rp#{Number(trx.totalBayar).toLocaleString('id-ID')}
+      
+      if trx.metode
+        .total-row(style="font-size: 10px;")
+          span Metode
+          span= trx.metode
+      
+      .total-row(style="font-size: 10px;")
+        span Bayar
+        - let nominalBayar = Number(trx.tunai) || 0
+        span Rp#{nominalBayar.toLocaleString('id-ID')}
+      
+      .total-row(style="font-size: 10px;")
+        span Kembali
+        - let nominalTotal = Number(trx.totalBayar) || 0
+        - let kembalian = nominalBayar - nominalTotal
+        span Rp#{(kembalian < 0 ? 0 : kembalian).toLocaleString('id-ID')}
+
+    .dashed-line
+
+    .text-center(style="margin-top: 5px;")
+      p(style="font-weight: bold;") TERIMA KASIH
+      p(style="font-size: 9px;") Simpan struk sebagai bukti bayar
+    
+    .no-print(style="margin-top: 30px; text-align: center;")
+      button(onclick="window.print()" style="width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;") CETAK SEKARANG
+      br
+      a(href="/" style="display: inline-block; margin-top: 15px; color: #666; font-size: 11px; text-decoration: none;") ⬅ Kembali ke Kasir
+
     script.
-      // Begitu halaman selesai dimuat, dialog cetak langsung muncul
       window.onload = function() {
         window.print();
-        
-        // Opsional: Jika ingin otomatis kembali ke kasir setelah cetak selesai/cancel
         window.onafterprint = function() {
-        window.location.href = '/';
+          window.location.href = '/';
         };
       }
